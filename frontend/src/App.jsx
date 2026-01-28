@@ -6,7 +6,7 @@ import {
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
     Tab, Tabs, CircularProgress, Chip
 } from '@mui/material';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 
 // Groww-inspired theme colors
 const COLORS = {
@@ -33,6 +33,10 @@ function App() {
     const [trades, setTrades] = useState([]);
     const [error, setError] = useState('');
     const [selectedPeriod, setSelectedPeriod] = useState('1mo');
+    const [news, setNews] = useState([]);
+    const [orderType, setOrderType] = useState('MARKET');
+    const [limitPrice, setLimitPrice] = useState('');
+    const [pendingOrders, setPendingOrders] = useState([]);
 
     useEffect(() => {
         fetchInitialData();
@@ -47,8 +51,28 @@ function App() {
             fetchQuote();
             fetchHistory();
             fetchTrades();
+            fetchNews();
+            fetchOrders();
         }
     }, [selectedTicker, status?.current_date, selectedPeriod]);
+
+    const fetchNews = async () => {
+        try {
+            const res = await axios.get(`/api/news/${selectedTicker}`);
+            setNews(res.data);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const fetchOrders = async () => {
+        try {
+            const res = await axios.get('/api/orders');
+            setPendingOrders(res.data);
+        } catch (err) {
+            console.error(err);
+        }
+    };
 
     const fetchInitialData = async () => {
         try {
@@ -107,14 +131,18 @@ function App() {
     const handleTrade = async (action) => {
         try {
             const endpoint = action === 'BUY' ? '/api/buy' : '/api/sell';
-            const res = await axios.post(endpoint, {
+            const payload = {
                 ticker: selectedTicker,
                 quantity: parseInt(quantity),
-                action: action
-            });
+                action: action,
+                order_type: orderType,
+                price: orderType === 'LIMIT' ? parseFloat(limitPrice) : null
+            };
+            const res = await axios.post(endpoint, payload);
             setStatus(res.data.status);
             setError('');
             fetchTrades();
+            fetchOrders();
         } catch (err) {
             setError(err.response?.data?.detail || 'Trade failed');
         }
@@ -263,40 +291,93 @@ function App() {
                             {/* Chart */}
                             <Box height={300} mb={3}>
                                 <ResponsiveContainer width="100%" height="100%">
-                                    <LineChart data={history}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke={COLORS.border} vertical={false} />
-                                        <XAxis dataKey="date" hide />
-                                        <YAxis
-                                            domain={['auto', 'auto']}
-                                            stroke={COLORS.textSec}
-                                            tick={{ fill: COLORS.textSec, fontSize: 12 }}
+                                    <AreaChart data={history}>
+                                        <defs>
+                                            <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor={COLORS.success} stopOpacity={0.1} />
+                                                <stop offset="95%" stopColor={COLORS.success} stopOpacity={0} />
+                                            </linearGradient>
+                                        </defs>
+                                        <XAxis
+                                            dataKey="date"
+                                            hide={false}
                                             axisLine={false}
                                             tickLine={false}
+                                            tick={{ fill: COLORS.textSec, fontSize: 12 }}
+                                            tickFormatter={(str) => {
+                                                if (!str) return '';
+                                                if (selectedPeriod === '1d') {
+                                                    return str.split(' ')[1]?.substring(0, 5) || '';
+                                                }
+                                                return new Date(str).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                                            }}
+                                            interval="preserveStartEnd"
+                                        />
+                                        <YAxis
+                                            domain={['auto', 'auto']}
+                                            hide
                                         />
                                         <Tooltip
                                             contentStyle={{
                                                 backgroundColor: COLORS.paper,
-                                                border: `1px solid ${COLORS.border}`,
+                                                border: "none",
                                                 borderRadius: 8,
-                                                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                                                boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
                                             }}
-                                            itemStyle={{
-                                                color: (history.length > 0 && history[history.length - 1].price < history[0].price) ? COLORS.danger : COLORS.success,
-                                                fontWeight: 600
-                                            }}
+                                            itemStyle={{ color: COLORS.text, fontWeight: 600 }}
+                                            labelStyle={{ color: COLORS.textSec, marginBottom: 4 }}
                                         />
-                                        <Line
+                                        {history.length > 0 && (
+                                            <ReferenceLine
+                                                y={history[0].price}
+                                                stroke={COLORS.textSec}
+                                                strokeDasharray="3 3"
+                                                strokeOpacity={0.5}
+                                            />
+                                        )}
+                                        <Area
                                             type="monotone"
                                             dataKey="price"
-                                            stroke={(history.length > 0 && history[history.length - 1].price < history[0].price) ? COLORS.danger : COLORS.success}
-                                            dot={false}
+                                            stroke={COLORS.success}
+                                            fillOpacity={1}
+                                            fill="url(#colorPrice)"
                                             strokeWidth={2}
                                         />
-                                    </LineChart>
+                                    </AreaChart>
                                 </ResponsiveContainer>
                             </Box>
 
                             {/* Trading Controls */}
+                            <Box display="flex" flexDirection="column" gap={2} mb={2}>
+                                <Box display="flex" gap={2}>
+                                    <Button
+                                        size="small"
+                                        variant={orderType === 'MARKET' ? 'contained' : 'outlined'}
+                                        onClick={() => setOrderType('MARKET')}
+                                        sx={{ bgcolor: orderType === 'MARKET' ? COLORS.primary : 'transparent', color: orderType === 'MARKET' ? '#fff' : COLORS.text }}
+                                    >
+                                        Market
+                                    </Button>
+                                    <Button
+                                        size="small"
+                                        variant={orderType === 'LIMIT' ? 'contained' : 'outlined'}
+                                        onClick={() => setOrderType('LIMIT')}
+                                        sx={{ bgcolor: orderType === 'LIMIT' ? COLORS.primary : 'transparent', color: orderType === 'LIMIT' ? '#fff' : COLORS.text }}
+                                    >
+                                        Limit
+                                    </Button>
+                                </Box>
+                                {orderType === 'LIMIT' && (
+                                    <TextField
+                                        label="Limit Price (₹)"
+                                        type="number"
+                                        variant="outlined"
+                                        size="small"
+                                        value={limitPrice}
+                                        onChange={(e) => setLimitPrice(e.target.value)}
+                                    />
+                                )}
+                            </Box>
                             <Box display="flex" gap={2} alignItems="center">
                                 <TextField
                                     label="Quantity"
@@ -371,6 +452,8 @@ function App() {
                             >
                                 <Tab label="Holdings" />
                                 <Tab label="Orders" />
+                                <Tab label="Pending" />
+                                <Tab label="News" />
                             </Tabs>
 
                             <Box p={2}>
@@ -449,12 +532,54 @@ function App() {
                                         )}
                                     </Box>
                                 )}
+
+                                {tabInfo === 2 && (
+                                    <Box maxHeight={500} sx={{ overflowY: 'auto' }}>
+                                        {pendingOrders.map((o, i) => (
+                                            <Box key={i} mb={1.5} p={2} sx={{ bgcolor: COLORS.bg, borderRadius: 1, border: `1px solid ${COLORS.border}` }}>
+                                                <Typography variant="body2" fontWeight="600" sx={{ color: o.action === 'BUY' ? COLORS.success : COLORS.danger }}>
+                                                    {o.action} {o.ticker} @ ₹{o.price}
+                                                </Typography>
+                                                <Typography variant="caption" sx={{ color: COLORS.textSec }}>
+                                                    Qty: {o.quantity}
+                                                </Typography>
+                                            </Box>
+                                        ))}
+                                        {pendingOrders.length === 0 && <Typography align="center" sx={{ color: COLORS.textSec, py: 4 }}>No pending orders</Typography>}
+                                    </Box>
+                                )}
+
+                                {tabInfo === 3 && (
+                                    <Box maxHeight={500} sx={{ overflowY: 'auto' }}>
+                                        {news.map((item, index) => {
+                                            const content = item.content || {};
+                                            return (
+                                                <Box key={item.id || index} mb={2} p={0} sx={{ borderBottom: `1px solid ${COLORS.border}`, pb: 2 }}>
+                                                    <Typography variant="body2" fontWeight="600" sx={{ color: COLORS.text, mb: 0.5 }}>
+                                                        <a href={content.clickThroughUrl?.url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit' }}>
+                                                            {content.title}
+                                                        </a>
+                                                    </Typography>
+                                                    <Box display="flex" justifyContent="space-between">
+                                                        <Typography variant="caption" sx={{ color: COLORS.textSec }}>
+                                                            {content.provider?.displayName}
+                                                        </Typography>
+                                                        <Typography variant="caption" sx={{ color: COLORS.textSec }}>
+                                                            {content.pubDate ? new Date(content.pubDate).toLocaleDateString() : ''}
+                                                        </Typography>
+                                                    </Box>
+                                                </Box>
+                                            );
+                                        })}
+                                        {news.length === 0 && <Typography align="center" sx={{ color: COLORS.textSec, py: 4 }}>No news available</Typography>}
+                                    </Box>
+                                )}
                             </Box>
                         </Paper>
                     </Grid>
                 </Grid>
             </Container>
-        </Box>
+        </Box >
     )
 }
 

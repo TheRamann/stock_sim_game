@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Literal
 from datetime import datetime
 
 class StockQuote(BaseModel):
@@ -11,6 +11,16 @@ class TradeOrder(BaseModel):
     ticker: str
     quantity: int
     action: str  # "BUY" or "SELL"
+    order_type: str = "MARKET"  # "MARKET" or "LIMIT"
+    price: Optional[float] = None # Required for LIMIT orders
+
+class NewsItem(BaseModel):
+    uuid: str
+    title: str
+    publisher: str
+    link: str
+    providerPublishTime: int
+    type: str
 
 class TradeRecord(BaseModel):
     id: str

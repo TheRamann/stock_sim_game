@@ -49,29 +49,32 @@ def get_quote(ticker: str):
 
 @app.get("/api/history/{ticker}")
 def get_history(ticker: str, period: str = "1mo"):
-    # Map period to days
-    period_map = {
-        "1d": 1,
-        "5d": 5,
-        "1mo": 30,
-        "6mo": 180
-    }
-    days = period_map.get(period, 30)
-    history = game.stock_data.get_history(ticker.upper(), days=days)
+    # Determine interval based on period
+    interval = "1d"
+    if period == "1d":
+        interval = "5m"  # 5 minute intervals for 1 day view
+    elif period == "5d":
+        interval = "15m" # 15 minute intervals for 5 day view
+    elif period == "1mo":
+        interval = "1d"
+    elif period == "6mo":
+        interval = "1d"
+
+    history = game.stock_data.get_history(ticker.upper(), period=period, interval=interval)
     return history
 
 @app.post("/api/buy")
 def buy_stock(order: TradeOrder):
-    success = game.buy(order.ticker.upper(), order.quantity)
+    success = game.buy(order.ticker.upper(), order.quantity, order.order_type, order.price)
     if not success:
-        raise HTTPException(status_code=400, detail="Insufficient funds or invalid ticker")
+        raise HTTPException(status_code=400, detail="Insufficient funds, invalid ticker, or invalid Limit Order params")
     return {"message": "Buy successful", "status": game.get_status()}
 
 @app.post("/api/sell")
 def sell_stock(order: TradeOrder):
-    success = game.sell(order.ticker.upper(), order.quantity)
+    success = game.sell(order.ticker.upper(), order.quantity, order.order_type, order.price)
     if not success:
-        raise HTTPException(status_code=400, detail="Insufficient holdings or invalid ticker")
+        raise HTTPException(status_code=400, detail="Insufficient holdings, invalid ticker, or invalid Limit Order params")
     return {"message": "Sell successful", "status": game.get_status()}
 
 @app.get("/api/portfolio")
@@ -85,3 +88,11 @@ def get_trades():
 @app.get("/api/tickers")
 def get_tickers():
     return {"tickers": game.tickers}
+
+@app.get("/api/news/{ticker}")
+def get_news(ticker: str):
+    return game.stock_data.get_news(ticker.upper())
+
+@app.get("/api/orders", response_model=List[TradeOrder])
+def get_orders():
+    return game.limit_orders
