@@ -49,7 +49,11 @@ class StockData:
 
 class GameEngine:
     def __init__(self):
-        self.tickers = ["RELIANCE.NS", "TCS.NS", "HDFCBANK.NS", "INFY.NS", "TMCV.NS", "SBIN.NS", "BHARATCOAL.NS"]
+        self.tickers = [
+            "RELIANCE.NS", "TCS.NS", "HDFCBANK.NS", "INFY.NS", "TMCV.NS", "SBIN.NS", "BHARATCOAL.NS",
+            "ICICIBANK.NS", "HINDUNILVR.NS", "ITC.NS", "LT.NS", "BAJFINANCE.NS", "MARUTI.NS",
+            "ASIANPAINT.NS", "AXISBANK.NS", "TITAN.NS", "ULTRACEMCO.NS", "SUNPHARMA.NS", "WIPRO.NS"
+        ]
         self.stock_data = StockData(self.tickers)
         
         # Game State

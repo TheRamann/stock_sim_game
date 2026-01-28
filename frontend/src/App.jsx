@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
     Box, Container, Grid, Paper, Typography, Button,
-    Select, MenuItem, FormControl, InputLabel, TextField,
+    FormControl, TextField, Autocomplete,
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
     Tab, Tabs, CircularProgress, Chip
 } from '@mui/material';
@@ -139,6 +139,36 @@ function App() {
                             Stock Simulator
                         </Typography>
                         <Box display="flex" gap={2} alignItems="center">
+                            {/* Search Bar in Header */}
+                            <Autocomplete
+                                value={null} // Don't keep value, just for searching
+                                onChange={(event, newValue) => {
+                                    if (newValue) {
+                                        const originalTicker = tickers.find(t => t.replace('.NS', '') === newValue);
+                                        if (originalTicker) setSelectedTicker(originalTicker);
+                                    }
+                                }}
+                                options={tickers.map(t => t.replace('.NS', ''))}
+                                renderInput={(params) => (
+                                    <TextField
+                                        {...params}
+                                        placeholder="Search stocks..."
+                                        variant="outlined"
+                                        size="small"
+                                        sx={{
+                                            width: 250,
+                                            bgcolor: COLORS.bg,
+                                            '& .MuiOutlinedInput-root': {
+                                                '& fieldset': { borderColor: COLORS.border },
+                                                '&:hover fieldset': { borderColor: COLORS.primary },
+                                                '&.Mui-focused fieldset': { borderColor: COLORS.primary },
+                                            }
+                                        }}
+                                    />
+                                )}
+                                disableClearable
+                                sx={{ mr: 2 }}
+                            />
                             <Typography variant="body2" sx={{ color: COLORS.textSec }}>
                                 {status?.current_date}
                             </Typography>
@@ -193,23 +223,11 @@ function App() {
                     {/* Chart & Trading */}
                     <Grid item xs={12} md={8}>
                         <Paper elevation={0} sx={{ p: 3, bgcolor: COLORS.paper, border: `1px solid ${COLORS.border}`, borderRadius: 2, mb: 2 }}>
-                            {/* Stock Selector */}
+                            {/* Stock Title */}
                             <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                                <FormControl variant="standard" sx={{ minWidth: 150 }}>
-                                    <Select
-                                        value={selectedTicker}
-                                        onChange={(e) => setSelectedTicker(e.target.value)}
-                                        disableUnderline
-                                        sx={{
-                                            fontSize: '1.25rem',
-                                            fontWeight: 600,
-                                            color: COLORS.text,
-                                            '& .MuiSvgIcon-root': { color: COLORS.text }
-                                        }}
-                                    >
-                                        {tickers.map(t => <MenuItem key={t} value={t}>{t.replace('.NS', '')}</MenuItem>)}
-                                    </Select>
-                                </FormControl>
+                                <Typography variant="h5" fontWeight="600" sx={{ color: COLORS.text }}>
+                                    {selectedTicker.replace('.NS', '')}
+                                </Typography>
                                 <Box textAlign="right">
                                     <Typography variant="h5" fontWeight="600" sx={{ color: COLORS.text }}>
                                         ₹{quote?.price.toFixed(2)}
@@ -262,12 +280,15 @@ function App() {
                                                 borderRadius: 8,
                                                 boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
                                             }}
-                                            itemStyle={{ color: COLORS.primary, fontWeight: 600 }}
+                                            itemStyle={{
+                                                color: (history.length > 0 && history[history.length - 1].price < history[0].price) ? COLORS.danger : COLORS.success,
+                                                fontWeight: 600
+                                            }}
                                         />
                                         <Line
                                             type="monotone"
                                             dataKey="price"
-                                            stroke={COLORS.primary}
+                                            stroke={(history.length > 0 && history[history.length - 1].price < history[0].price) ? COLORS.danger : COLORS.success}
                                             dot={false}
                                             strokeWidth={2}
                                         />
@@ -364,7 +385,15 @@ function App() {
                                             </TableHead>
                                             <TableBody>
                                                 {Object.entries(status?.holdings || {}).map(([ticker, qty]) => (
-                                                    <TableRow key={ticker} sx={{ '&:hover': { bgcolor: COLORS.bg } }}>
+                                                    <TableRow
+                                                        key={ticker}
+                                                        onClick={() => setSelectedTicker(ticker)}
+                                                        sx={{
+                                                            '&:hover': { bgcolor: COLORS.bg },
+                                                            cursor: 'pointer',
+                                                            transition: 'background-color 0.2s'
+                                                        }}
+                                                    >
                                                         <TableCell sx={{ color: COLORS.text, fontWeight: 500, border: 'none' }}>
                                                             {ticker.replace('.NS', '')}
                                                         </TableCell>
