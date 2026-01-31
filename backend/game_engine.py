@@ -13,10 +13,8 @@ class StockData:
         import yfinance as yf
         try:
             t = yf.Ticker(ticker)
-            # Try fast_info first for real-time price
             price = t.fast_info.last_price
             if price is None:
-                 # Fallback to 1-minute history
                  hist = t.history(period="1d", interval="1m")
                  if not hist.empty:
                      price = hist['Close'].iloc[-1]
@@ -57,7 +55,6 @@ class StockData:
         try:
             t = yf.Ticker(ticker)
             news = t.news
-            # Robustly extract the array of stories
             if hasattr(news, 'get'):
                 data = news.get('data')
                 if data: return data
@@ -135,7 +132,6 @@ class GameEngine:
         self.stock_data = StockData(self.tickers)
         self.commodity_proxy = CommodityProxy()
         
-        # Game State
         self.initial_balance = 100000.0
         self.balance = self.initial_balance
         self.holdings: Dict[str, int] = {}
@@ -158,11 +154,9 @@ class GameEngine:
 
     def get_price(self, ticker: str):
         ticker = ticker.upper()
-        # Check if it's a commodity
         if ticker in self.commodity_proxy.TICKER_MAP:
             stats = self.commodity_proxy.get_stats(ticker)
             return stats["price"] if stats else None
-            
         return self.stock_data.get_price(ticker)
 
     def execute_trade(self, ticker: str, quantity: int, action: str, price: float) -> bool:
@@ -248,7 +242,6 @@ class GameEngine:
             self.watchlist.remove(ticker)
 
     def get_commodities(self):
-        """Fetch all commodity data in USD only"""
         tickers = list(self.commodity_proxy.TICKER_MAP.keys())
         data = self.commodity_proxy.get_all_commodities(tickers)
         return {"commodities": data}

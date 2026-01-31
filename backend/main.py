@@ -24,7 +24,11 @@ def read_root():
 
 @app.get("/api/status", response_model=PortfolioState)
 def get_status():
-    return game.get_status()
+    status = game.get_status()
+    # Explicitly ensure ticker_names is present
+    if not status.ticker_names:
+        status.ticker_names = game.ticker_names
+    return status
 
 @app.post("/api/reset")
 def reset_game():

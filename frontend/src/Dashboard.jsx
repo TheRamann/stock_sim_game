@@ -133,10 +133,14 @@ function Dashboard() {
         }
     };
 
-    const filteredTickers = (tickers || []).filter(t =>
-        t.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (status?.ticker_names?.[t] && status.ticker_names[t].toLowerCase().includes(searchTerm.toLowerCase()))
-    );
+    const filteredTickers = (tickers || []).filter(t => {
+        const symbol = t.toLowerCase();
+        const search = searchTerm.toLowerCase();
+        const name = status?.ticker_names?.[t]?.toLowerCase() || '';
+        return symbol.includes(search) || name.includes(search);
+    });
+
+    const displayedTickers = searchTerm ? filteredTickers : filteredTickers.slice(0, 10);
 
     if (loading || !status) {
         return <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh" bgcolor={COLORS.bg}><CircularProgress sx={{ color: COLORS.primary }} /></Box>;
@@ -197,7 +201,7 @@ function Dashboard() {
             <Box component="main" sx={{ flexGrow: 1, p: 4 }}>
                 <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
                     <TextField
-                        placeholder="Search stocks..."
+                        placeholder="Search for stocks (e.g. Tata, Reliance)..."
                         size="small"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
@@ -305,13 +309,24 @@ function Dashboard() {
                             <Box display="flex" justifyContent="space-between"><Typography variant="body2">Balance</Typography><Typography variant="body2" fontWeight="bold">₹{status.balance.toLocaleString()}</Typography></Box>
                         </Paper>
                         <Paper elevation={0} sx={{ p: 3, borderRadius: '20px', border: `1px solid ${COLORS.border}`, maxHeight: 400, overflowY: 'auto' }}>
-                            <Typography variant="subtitle2" fontWeight="800" mb={2}>All Stocks</Typography>
-                            {filteredTickers.map(t => (
-                                <Box key={t} onClick={() => setSelectedTicker(t)} sx={{ p: 1, mb: 0.5, cursor: 'pointer', borderRadius: '8px', bgcolor: selectedTicker === t ? '#e8fdf8' : 'transparent' }}>
-                                    <Typography variant="body2" fontWeight="700" sx={{ color: selectedTicker === t ? COLORS.primary : COLORS.text }}>{t.replace('.NS', '')}</Typography>
-                                    <Typography variant="caption" sx={{ color: COLORS.textSec }}>{status.ticker_names?.[t]}</Typography>
+                            <Typography variant="subtitle2" fontWeight="800" mb={2}>{searchTerm ? 'Search Results' : 'Top Stocks'}</Typography>
+                            {displayedTickers.map(t => (
+                                <Box key={t} onClick={() => setSelectedTicker(t)} sx={{ p: 1, mb: 0.5, cursor: 'pointer', borderRadius: '8px', bgcolor: selectedTicker === t ? '#e8fdf8' : 'transparent', '&:hover': { bgcolor: '#f7fafc' } }}>
+                                    <Box display="flex" justifyContent="space-between" alignItems="center">
+                                        <Typography variant="body2" fontWeight="800" sx={{ color: selectedTicker === t ? COLORS.primary : COLORS.text, fontSize: '0.95rem' }}>{t.replace('.NS', '')}</Typography>
+                                        {selectedTicker === t && <Chip label="Selected" size="small" sx={{ height: 20, fontSize: '0.6rem', bgcolor: COLORS.primary, color: 'white' }} />}
+                                    </Box>
+                                    <Typography variant="caption" sx={{ color: COLORS.textSec, display: 'block', mt: -0.5 }}>{status.ticker_names?.[t] || 'Stock'}</Typography>
                                 </Box>
                             ))}
+                            {searchTerm && filteredTickers.length === 0 && (
+                                <Box sx={{ py: 4, textAlign: 'center' }}>
+                                    <Typography variant="body2" sx={{ color: COLORS.textSec }}>No stocks found for "{searchTerm}"</Typography>
+                                </Box>
+                            )}
+                            {!searchTerm && filteredTickers.length > 10 && (
+                                <Typography variant="caption" sx={{ display: 'block', textAlign: 'center', mt: 1, color: COLORS.textSec, fontStyle: 'italic' }}>Search for more stocks...</Typography>
+                            )}
                         </Paper>
                     </Grid>
                 </Grid>
