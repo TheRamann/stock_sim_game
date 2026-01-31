@@ -4,6 +4,7 @@ from datetime import datetime
 
 class StockQuote(BaseModel):
     ticker: str
+    name: Optional[str] = None
     date: str
     price: float
 
@@ -34,6 +35,7 @@ class TradeRecord(BaseModel):
 class PortfolioState(BaseModel):
     balance: float
     holdings: Dict[str, int]  # Ticker -> Quantity
+    ticker_names: Optional[Dict[str, str]] = None
     total_value: float
     pnl: float
     current_date: str

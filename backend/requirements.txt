@@ -4,3 +4,5 @@ yfinance
 pandas
 pydantic
 python-multipart
+requests
+python-dotenv
