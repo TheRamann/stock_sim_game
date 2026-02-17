@@ -1,31 +1,49 @@
-# Stock Trading Simulation Game
+# Stock Trading Simulation Game 📈
 
-A web-based stock trading simulation game that allows users to paper trade Indian stocks (NSE) using real-time/historical data.
+A realistic, web-based stock trading simulation game that allows users to paper trade Indian stocks (NSE) using real-time data. Master the markets without the financial risk!
 
-## Project Structure
+## About The Project 🚀
 
-*   **Frontend**: React application built with Vite and Material UI.
-*   **Backend**: Python FastAPI application handling game logic and stock data.
+This project is designed to be a comprehensive tool for learning and practicing stock trading. It simulates a real trading environment where users can buy and sell stocks, track their portfolio performance, and analyze market trends using interactive charts.
 
-## Features
+Whether you're a beginner looking to understand the basics of the stock market or an experienced trader testing new strategies, this simulator provides a safe and feature-rich platform to hone your skills.
 
-*   Real-time stock data fetching.
-*   Buy and Sell stocks with virtual currency.
-*   Portfolio tracking (Holdings, Total Value, P&L).
-*   Interactive stock charts.
-*   Transaction history.
-*   Search stocks by symbol.
+## Features ✨
 
-## Prerequisites
+*   **Real-Time Market Data**: Fetches live stock prices and data for NSE/BSE stocks.
+*   **Virtual Trading**: Buy and sell stocks using virtual currency, simulating real-world order execution.
+*   **Portfolio Management**: Track your Holdings, Total Portfolio Value, and realized/unrealized Profit & Loss (P&L) in real-time.
+*   **Interactive Charts**: Analyze stock performance with dynamic charts (Line/Candlestick) supporting various timeframes.
+*   **Transaction History**: Keep a detailed log of all your buy and sell orders.
+*   **Stock Search**: Easily search for stocks by their symbol or company name.
+*   **Responsive Design**: A modern, clean interface tailored for both desktop and mobile devices.
 
-*   Node.js (v16+. recommended)
+## Screenshots 📸
+
+*(Screenshots coming soon)*
+
+<!-- 
+Example format:
+![Dashboard Screenshot](./screenshots/dashboard.png)
+-->
+
+## Tech Stack 🛠️
+
+*   **Frontend**: React, TypeScript, Vite, Material UI, Recharts
+*   **Backend**: Python, FastAPI, yfinance
+
+## Getting Started 🏁
+
+Follow these instructions to set up the project locally.
+
+### Prerequisites
+
+*   Node.js (v16+ recommended)
 *   Python (v3.8+)
-
-## Installation & Running
 
 ### 1. Backend Setup
 
-The backend runs on FastAPI and uses `yfinance` for stock data.
+The backend runs on FastAPI and uses `yfinance` to fetch stock data.
 
 ```bash
 # Navigate to backend directory
@@ -42,11 +60,11 @@ pip install -r requirements.txt
 uvicorn main:app --reload
 ```
 
-The backend server will start at `http://localhost:8000` (or similar).
+The server will start at `http://localhost:8000`.
 
 ### 2. Frontend Setup
 
-The frontend is a React Vite app.
+The frontend is a fast React application powered by Vite.
 
 ```bash
 # Navigate to frontend directory
@@ -59,12 +77,16 @@ npm install
 npm run dev
 ```
 
-The frontend will typically run at `http://localhost:5173`.
+The application will be available at `http://localhost:5173`.
 
-## Usage
+## Usage 💡
 
-1.  Make sure both Backend and Frontend servers are running.
-2.  Open the frontend URL (e.g., `http://localhost:5173`) in your browser.
-3.  Use the search bar to find stocks (e.g., `RELIANCE`, `TCS`).
-4.  Buy or sell quantities using the interface.
-5.  View your holdings and performance in the dashboard.
+1.  Ensure both **backend** and **frontend** servers are running.
+2.  Open your browser and navigate to `http://localhost:5173`.
+3.  **Search** for a stock (e.g., `RELIANCE`, `TCS`, `INFY`).
+4.  **Trade**: Enter a quantity and click Buy or Sell.
+5.  **Monitor**: Watch your Portfolio update in real-time as market prices change.
+
+---
+
+*Happy Trading!* 🚀
