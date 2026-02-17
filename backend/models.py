@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Dict, List, Optional, Literal
 from datetime import datetime
 
@@ -10,7 +10,7 @@ class StockQuote(BaseModel):
 
 class TradeOrder(BaseModel):
     ticker: str
-    quantity: int
+    quantity: int = Field(..., gt=0, description="Quantity must be greater than 0")
     action: str  # "BUY" or "SELL"
     order_type: str = "MARKET"  # "MARKET" or "LIMIT"
     price: Optional[float] = None # Required for LIMIT orders

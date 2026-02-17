@@ -192,6 +192,8 @@ class GameEngine:
         self.trades.append(record)
 
     def buy(self, ticker: str, quantity: int, order_type: str = "MARKET", price: float = None) -> bool:
+        if quantity <= 0:
+            return False
         self.update_time()
         if order_type == "LIMIT":
             self.limit_orders.append(TradeOrder(ticker=ticker, quantity=quantity, action="BUY", order_type="LIMIT", price=price))
@@ -201,6 +203,8 @@ class GameEngine:
         return self.execute_trade(ticker, quantity, "BUY", current_price)
 
     def sell(self, ticker: str, quantity: int, order_type: str = "MARKET", price: float = None) -> bool:
+        if quantity <= 0:
+            return False
         self.update_time()
         if order_type == "LIMIT":
              current_qty = self.holdings.get(ticker, 0)
